@@ -1,0 +1,38 @@
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+ARG TZ=Asia/Shanghai
+ENV TZ=${TZ}
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# 更新源，替换为阿里云源 
+RUN sed -i "s/security.ubuntu.com/mirrors.aliyun.com/" /etc/apt/sources.list && \     
+  sed -i "s/archive.ubuntu.com/mirrors.aliyun.com/" /etc/apt/sources.list && \     
+  sed -i "s/security-cdn.ubuntu.com/mirrors.aliyun.com/" /etc/apt/sources.list && \
+  apt clean
+
+# 更新源，安装相应工具 
+RUN apt update && apt install -y \     
+  zsh \     
+  vim \     
+  wget \     
+  curl \    
+  git 
+RUN chsh -s /bin/zsh  
+
+#  安装 oh-my-zsh 并设置zsh为默认shell
+RUN sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
+
+# 安装 java-21
+RUN apt update && apt install -y openjdk-21-jdk
+
+# 设置环境变量
+ENV JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
+ENV PATH=$PATH:$JAVA_HOME/bin
+
+# 设置工作目录，可根据实际需求更改
+WORKDIR /workdir
+
+# 将Docker容器的标准输入保持打开，以便运行交互式Shell
+CMD ["zsh"]
